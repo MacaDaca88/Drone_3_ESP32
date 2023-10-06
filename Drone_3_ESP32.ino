@@ -1,6 +1,9 @@
 #include "BluetoothSerial.h"
 #include <Wire.h>
 #include "SparkFun_MMA8452Q.h"
+#include <HardwareSerial.h>
+
+HardwareSerial MySerial(2);
 
 BluetoothSerial SerialBT;
 
@@ -24,7 +27,7 @@ String dataNano;
 
 void setup() {
   Serial.begin(115200);
-  Serial2.begin(115200, SERIAL_8N1, Rx2, Tx2);
+  MySerial.begin(115200, SERIAL_8N1, Rx2, Tx2);
   SerialBT.begin("Esp Drone");
 
   pinMode(RegTemp, INPUT);
@@ -49,15 +52,15 @@ void loop() {
   }
 */
 
-  while (Serial2.available()) {
-    char a = Serial2.read();
+  while (MySerial.available()) {
+    char a = MySerial.read();
     if (a != -1) {
       dataNano += a;
       if (a == '\n') {
         Serial.print("INCOMING DATA");
         Serial.println(dataNano);
         dataNano = "";
-        Serial2.end();
+        MySerial.end();
         break;
         
       }

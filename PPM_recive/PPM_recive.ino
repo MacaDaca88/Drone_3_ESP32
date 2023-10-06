@@ -8,6 +8,10 @@
 #define SWITCH3WAY_1 3
 #define SWITCH 2
 
+#define ESC_PIN_1 9
+#define ESC_PIN_2 10
+#define ESC_PIN_3 11
+#define ESC_PIN_4 12
 
 const long interval = 50;
 unsigned long previousMillis = 0;
@@ -16,6 +20,15 @@ void setup() {
   Serial.begin(9600);
 
   ppm.begin(A0, false);
+  pinMode(ESC_PIN_1, OUTPUT);
+  pinMode(ESC_PIN_2, OUTPUT);
+  pinMode(ESC_PIN_3, OUTPUT);
+  pinMode(ESC_PIN_4, OUTPUT);
+
+  digitalWrite(ESC_PIN_1, LOW);
+  digitalWrite(ESC_PIN_2, LOW);
+  digitalWrite(ESC_PIN_3, LOW);
+  digitalWrite(ESC_PIN_4, LOW);
 }
 
 void loop() {
@@ -29,6 +42,16 @@ void loop() {
   short yaw = ppm.read_channel(YAW);
   short switch3way_1 = ppm.read_channel(SWITCH3WAY_1);
   short Switch = ppm.read_channel(SWITCH);
+
+
+int escValue = map(throttle, 1000, 2000, 0, 255);
+//Serial.print("escValue");
+//Serial.println(escValue);
+  // Update ESCs with the mapped throttle value
+  analogWrite(ESC_PIN_4, escValue);
+  analogWrite(ESC_PIN_2, escValue);
+  analogWrite(ESC_PIN_3, escValue);
+  analogWrite(ESC_PIN_1, escValue);
 
 
   if (currentMillis - previousMillis >= interval) {
