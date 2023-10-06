@@ -1,31 +1,30 @@
-
 #include "BluetoothSerial.h"
-#include <Wire.h>               // I2C Library
-#include "SparkFun_MMA8452Q.h"  //Accelerometer Library
+#include <Wire.h>
+#include "SparkFun_MMA8452Q.h"
 
 BluetoothSerial SerialBT;
 
 #define LED_BUILTIN 2
 #define RegTemp 33
-#define RECIVER A4
+#define RECEIVER 19
 
 #define Rx2 16
 #define Tx2 17
 
-MMA8452Q accel;      // create instance of the MMA8452 class
-float TempRawValue;  // a home for the Temp data
+MMA8452Q accel;
+float TempRawValue;
 float VoltageOut;
 
-float TempRegVIN;  // Temp sensor reading Voltage reg VIN 18v Litium to LM7805 to 5v ESP32
+float TempRegVIN;
 float TempK;
 int HalVal = 0;
 
 String data;
+String dataNano;
 
 void setup() {
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, Rx2, Tx2);
-
   SerialBT.begin("Esp Drone");
 
   pinMode(RegTemp, INPUT);
@@ -33,24 +32,38 @@ void setup() {
 
   Serial.println("MMA8452Q Booting Up!");
   Wire.begin();
-  digitalWrite(LED_BUILTIN, 0);
+  digitalWrite(LED_BUILTIN, LOW);
   if (accel.begin() == false) {
     Serial.println("Not Connected. Please check connections and read the hookup guide.");
-    // while (1)
-    //   ;
   }
-  digitalWrite(LED_BUILTIN, 0);
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 void loop() {
-  int x = analogRead(RECIVER);
+  int x = analogRead(RECEIVER);
   Serial.print("RECIVER");
   Serial.println(x);
+  /*if (Serial2.readString().toInt() >= 1900) {
+    Serial.println("TESTING");
+    delay(2000);
+  }
+*/
 
   while (Serial2.available()) {
-    Serial.print("INCOMING DATA");
-    Serial.println(Serial2.readString());
+    char a = Serial2.read();
+    if (a != -1) {
+      dataNano += a;
+      if (a == '\n') {
+        Serial.print("INCOMING DATA");
+        Serial.println(dataNano);
+        dataNano = "";
+        Serial2.end();
+        break;
+        
+      }
+    }
   }
+
   while (SerialBT.available()) {
     char c = SerialBT.read();
     if (c != -1) {
@@ -63,12 +76,13 @@ void loop() {
       }
     }
     if (SerialBT.read() == 1) {
-      digitalWrite(LED_BUILTIN, 0);
+      digitalWrite(LED_BUILTIN, LOW);
     }
     if (SerialBT.read() == 0) {
-      digitalWrite(LED_BUILTIN, 1);
+      digitalWrite(LED_BUILTIN, HIGH);
     }
   }
+
   HalVal = hallRead();
 
   TempRawValue = analogRead(RegTemp);
@@ -78,61 +92,51 @@ void loop() {
 
   Serial.print("Magnetic Field  == ");
   SerialBT.print("Magnetic Field  == ");
-
   Serial.println(HalVal);
   SerialBT.println(HalVal);
 
   Serial.print("TempRawValue  = ");
   SerialBT.print("TempRawValue  = ");
-
   Serial.println(TempRawValue);
   SerialBT.println(TempRawValue);
 
   Serial.print("TempRegVIN  = ");
   SerialBT.print("TempRegVIN  = ");
-
   Serial.print(TempRegVIN);
   SerialBT.print(TempRegVIN);
-
   Serial.println("(C)");
   SerialBT.println("(C)");
 
   Serial.print("VoltageOut  = ");
   SerialBT.print("VoltageOut  = ");
-
   Serial.print(VoltageOut);
   SerialBT.print(VoltageOut);
-
   Serial.println("(mV)");
   SerialBT.println("(mV)");
 
-
   if (HalVal >= 20) {
-    //  digitalWrite(LED_BUILTIN,0);
+    // digitalWrite(LED_BUILTIN,LOW);
   } else {
-    // digitalWrite(LED_BUILTIN,1);
+    // digitalWrite(LED_BUILTIN,HIGH);
   }
-  if (accel.available()) {  // Wait for new data from accelerometer
-    // Acceleration of x, y, and z directions in g units
+
+  if (accel.available()) {
     Serial.print("X");
     SerialBT.print("X");
 
     Serial.println(accel.getCalculatedX(), 2);
     SerialBT.println(accel.getCalculatedX(), 2);
 
-    //Serial.print("\t");
     Serial.print("Y");
     SerialBT.print("Y");
 
     Serial.println(accel.getCalculatedY(), 2);
     SerialBT.println(accel.getCalculatedY(), 2);
 
-    //Serial.print("\t");
     Serial.print("Z");
     SerialBT.print("Z");
 
     Serial.println(accel.getCalculatedZ(), 2);
     SerialBT.println(accel.getCalculatedZ(), 2);
   }
-  delay(1000);
 }
