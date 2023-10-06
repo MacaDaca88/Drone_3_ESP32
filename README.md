@@ -14,7 +14,7 @@ Drone_3_ESP32.ino  == ESP32
 
 
  VIN= upto 36V
- 2200uf capacitor to help with load spikes
- 10a fuse for board protection
+ 2200uf capacitor to help with load spikes to ensure ESP32 has a constant 5v supply
+ 10a fuse for board protection on 5v line
 
 
